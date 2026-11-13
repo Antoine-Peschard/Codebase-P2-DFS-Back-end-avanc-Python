@@ -1,9 +1,3 @@
-"""Command line expense tracker (data stored in a CSV file).
-
-The file emma_expenses.csv shipped with the project already contains a full
-year of expenses, so the statistics are meaningful from the first run.
-"""
-
 import csv
 import os
 from datetime import datetime
@@ -13,11 +7,6 @@ COLUMNS = ["date", "category", "description", "amount"]
 
 
 class Expense:
-    """One expense, with its values already converted to the right type.
-
-    A CSV file only stores text, so the amount arrives as "68.72" and not as a
-    number: the conversion is done once, here.
-    """
 
     def __init__(self, date, category, description, amount):
         self.date = date  # kept as text, e.g. "05/03/2025"
@@ -26,12 +15,10 @@ class Expense:
         self.amount = float(amount)
 
     def to_row(self):
-        """Return the expense as a list of texts, ready to be written in the CSV."""
         return [self.date, self.category, self.description, f"{self.amount:.2f}"]
 
 
 def read_expenses():
-    """Return the list of expenses saved in the CSV file."""
     if not os.path.exists(FILENAME):
         return []
 
@@ -51,7 +38,6 @@ def read_expenses():
 
 
 def save_expense(expense):
-    """Append one expense at the end of the CSV file."""
     file_exists = os.path.exists(FILENAME)
 
     with open(FILENAME, "a", newline="", encoding="utf-8") as file:
@@ -65,7 +51,6 @@ def save_expense(expense):
 
 
 def show_history():
-    """Display every saved expense along with the total."""
     expenses = read_expenses()
 
     if not expenses:
@@ -89,11 +74,9 @@ def show_history():
 
 
 def add_expense():
-    """Ask for the details of an expense and append it to the CSV file."""
     category = input("Category (e.g. groceries, transport): ").strip()
     description = input("Description: ").strip()
 
-    # In French a comma is used for decimals, but Python needs a dot.
     answer = input("Amount in euros: ").strip().replace(",", ".")
 
     try:
@@ -110,7 +93,6 @@ def add_expense():
 
 
 def show_menu():
-    """Display the available choices."""
     print("=== Expense tracker ===")
     print("1. Show history")
     print("2. Add an expense")
