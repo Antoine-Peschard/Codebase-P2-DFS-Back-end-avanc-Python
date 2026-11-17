@@ -6,10 +6,14 @@ year of expenses, so the statistics are meaningful from the first run.
 
 import csv
 import os
+import math
 from datetime import datetime
 
 FILENAME = "emma_expenses.csv"  # or "personnal_expenses.csv"
 COLUMNS = ["date", "category", "description", "amount"]
+
+"""Rate maximum d'endettement pour simulation de crédits dans le code."""
+MAX_DEBT_RATIO = 0.35
 
 
 class Expense:
@@ -79,7 +83,6 @@ def count_month(expenses):
 
 
 def get_total(expenses):
-    expenses = read_expenses()
 
     total = 0
     for expense in expenses:
@@ -98,10 +101,119 @@ def total_by_category(expenses):
     return counts
 
 def monthly_average(expenses):
-    expenses = read_expenses()
+    if not expenses:
+        return
     average = get_total(expenses)/count_month(expenses)
     return average
+
+
+def ask_amount(prompt, allow_zero=False):
+    """Fonction à appeler pour demander un montant dans les fonctionnalités intégrées, exclu directement l'entrée 0 ou négative"""
+    answer = input(prompt).strip().replace(",", ".")
+
+    """Gestion des entrées de caractères."""
+    try:
+        amount = float(answer)
+    except ValueError:
+        print("Error: Invalid Entry.\n")
+        return None
+
+    """Gestion des entrées négatives ou égales à 0."""
+    if not math.isfinite(amount) or amount < 0 or (amount == 0 and not allow_zero):
+        print("Error: Value is out of range.\n")
+        return None
+
+    return amount
+
+
+def car_savings_simulation():
+    expenses = read_expenses()
+    income = input("Enter your monthly income: ").strip().replace(",", ".")
     
+    try:
+        income = float(income)
+        if income <=0:
+            print("Error: Income must be greater than 0.")
+            return
+    except ValueError:
+        print("Error: The Income Entry is not valid, try again.")
+        return
+
+    car_price = input("Enter the price of the car you're willing to buy: ").strip().replace(",", ".")
+    try:
+        car_price = float(car_price)
+        if car_price <= 0:
+            print("Error: Price must be greater than 0.")
+            return
+    except ValueError:
+        print("Error: The Car Price Entry is not valid, try again.")
+        return
+
+    savings = income - monthly_average(expenses)
+    if (savings <=0):
+        print("Error: Savings unavailable, to many expenses for your monthly income.")
+    else:
+        print(f"Monthly savings available: {savings:.2f}")
+        months_needed = math.ceil(car_price/savings)
+        print(f"Months needed to buy the car: {months_needed}")
+
+
+def get_housing_monthly(expenses):
+    """Retourne la dépense moyenne dans la catégorie HOUSING ou rien si il n'y en a pas"""
+    total_housing = total_by_category(expenses)
+
+    if "HOUSING" not in total_housing:
+        print("No housing expense found, add one first. \n")
+        return None
+    return total_housing["HOUSING"] / count_month(expenses)
+
+
+def house_mortgage_simulation():
+    """Simulation d'un emprunt immobilier"""
+    expenses = read_expenses()
+
+    if not expenses:
+        print("No expense saved yet, add one first. \n")
+        return
+    
+    income = ask_amount("Enter your monthly net income: ")
+    if income is None:
+        return
+    
+    annual_rate = ask_amount("Enter the annual interest rate (%): ", allow_zero=True)
+    if annual_rate is None:
+        return
+
+    years = ask_amount("Enter the loan duration (years): ")
+    if years is None:
+        return
+
+    housing_monthly = get_housing_monthly(expenses)
+    if housing_monthly is None:
+        print("No housing savings capacity: the project cannot be financed.\n")
+        return
+
+    savings = income - monthly_average(expenses)
+    if savings <= 0:
+        print("Not enough savings capacity: the project cannot be financed.\n")
+        return
+
+    theoretical_payment = savings + housing_monthly
+    payment = min(theoretical_payment, income * MAX_DEBT_RATIO)
+
+    n = years * 12
+    r = annual_rate / 100 / 12
+
+    if r == 0:
+        capital = payment * n
+    else:
+        capital = payment * (1 - (1 + r) ** (-n)) / r
+
+    print(f"Monthly housing expense: {housing_monthly:.2f}")
+    print(f"Monthly savings available: {savings:.2f}")
+    print(f"Retained monthly payment: {payment:.2f}")
+    print(f"Estimated borrowing capacity: {capital:.2f}")
+        
 
 def show_history():
     """Display every saved expense along with the total."""
