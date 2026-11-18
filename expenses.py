@@ -128,30 +128,19 @@ def ask_amount(prompt, allow_zero=False):
 
 def car_savings_simulation():
     expenses = read_expenses()
-    income = input("Enter your monthly income: ").strip().replace(",", ".")
-    
-    try:
-        income = float(income)
-        if income <=0:
-            print("Error: Income must be greater than 0.")
-            return
-    except ValueError:
-        print("Error: The Income Entry is not valid, try again.")
+    income = ask_amount("Enter your monthly net income: ")
+
+    if income is None:
         return
 
-    car_price = input("Enter the price of the car you're willing to buy: ").strip().replace(",", ".")
-    try:
-        car_price = float(car_price)
-        if car_price <= 0:
-            print("Error: Price must be greater than 0.")
-            return
-    except ValueError:
-        print("Error: The Car Price Entry is not valid, try again.")
+    car_price = ask_amount("Enter the price of the car you're willing to buy: ")
+    if income is None:
         return
 
     savings = income - monthly_average(expenses)
-    if (savings <=0):
-        print("Error: Savings unavailable, to many expenses for your monthly income.")
+    if savings <= 0:
+        print("Not enough savings capacity: the project cannot be financed.\n")
+        return
     else:
         print(f"Monthly savings available: {savings:.2f}")
         months_needed = math.ceil(car_price/savings)
