@@ -69,11 +69,13 @@ def save_expense(expense):
 
 
 def get_month_key(expense):
+    """Découpe la date pour récupérer uniquement mm/aaaa"""
     day, month, year = expense.date.split("/")
     return f"{month}/{year}"
 
 
 def count_month(expenses):
+    """Utilise un ensemble sans doublons pour compter le nombre de mois distincts couverts par les données."""
     months = set()
 
     for expense in expenses:
@@ -83,7 +85,7 @@ def count_month(expenses):
 
 
 def get_total(expenses):
-
+    """Additionne tous les montants avec une boucle simple."""
     total = 0
     for expense in expenses:
         total += expense.amount
@@ -91,6 +93,7 @@ def get_total(expenses):
 
 
 def total_by_category(expenses):
+    """Créer un dictionnaire {catégorie:total}."""
     counts = {}
 
     for expense in expenses:
@@ -101,6 +104,7 @@ def total_by_category(expenses):
     return counts
 
 def monthly_average(expenses):
+    """Retourne total / nombre de mois."""
     if not expenses:
         return
     average = get_total(expenses)/count_month(expenses)
@@ -127,6 +131,7 @@ def ask_amount(prompt, allow_zero=False):
 
 
 def car_savings_simulation():
+    """Simulation d'épargne pour l'achat d'une voiture sans emprunt."""
     expenses = read_expenses()
     income = ask_amount("Enter your monthly net income: ")
 
@@ -161,32 +166,39 @@ def house_mortgage_simulation():
     """Simulation d'un emprunt immobilier"""
     expenses = read_expenses()
 
+    """Vérifie d'abord si des dépenses existent."""
     if not expenses:
         print("No expense saved yet, add one first. \n")
         return
-    
+
+    """Demande à l'utilisateur son salaire net mensuel."""
     income = ask_amount("Enter your monthly net income: ")
     if income is None:
         return
-    
+
+    """Demande à l'utilisateur le taux d'intérêt de son prêt. Accepte 0."""
     annual_rate = ask_amount("Enter the annual interest rate (%): ", allow_zero=True)
     if annual_rate is None:
         return
 
+    """Demande la durée du prêt."""
     years = ask_amount("Enter the loan duration (years): ")
     if years is None:
         return
 
+    """Récupère la dépense mensuelle moyenne de logement et arrête le programme si cette dépense n'existe pas."""
     housing_monthly = get_housing_monthly(expenses)
     if housing_monthly is None:
         print("No housing savings capacity: the project cannot be financed.\n")
         return
 
+    """Récupère en fonction du salaire l'épargne mensuelle disponible."""
     savings = income - monthly_average(expenses)
     if savings <= 0:
         print("Not enough savings capacity: the project cannot be financed.\n")
         return
 
+    """Calcule le paiement mensuel théorique en prenant en compte que la dépense mensuelle de logement sera remplacée par les mensualités de paiement de l'emprunt immobilier."""
     theoretical_payment = savings + housing_monthly
     payment = min(theoretical_payment, income * MAX_DEBT_RATIO)
 
