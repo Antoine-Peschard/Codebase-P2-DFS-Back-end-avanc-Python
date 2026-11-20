@@ -139,7 +139,7 @@ def car_savings_simulation():
         return
 
     car_price = ask_amount("Enter the price of the car you're willing to buy: ")
-    if income is None:
+    if car_price is None:
         return
 
     savings = income - monthly_average(expenses)
